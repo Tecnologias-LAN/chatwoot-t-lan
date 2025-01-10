@@ -22,6 +22,7 @@ jobs:
         run: |
           docker build -f docker/Dockerfile -t ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:latest .
           docker login -u ${{ secrets.DOCKER_USERNAME2 }} -p ${{ secrets.DOCKER_PASSWORD }}
+          docker images
           docker push ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:latest
 
       - name: Deploy to production
