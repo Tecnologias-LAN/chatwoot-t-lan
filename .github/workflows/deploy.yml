@@ -18,33 +18,41 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Build and push Docker image
-        run: |
-          docker build -f docker/Dockerfile -t ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:latest .
-          docker login -u ${{ secrets.DOCKER_USERNAME2 }} -p ${{ secrets.DOCKER_PASSWORD }}
-          docker images
-          docker push ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:latest
+      # - name: Build and push Docker image
+      #   run: |
+      #     docker build -f docker/Dockerfile -t ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:latest .
+      #     docker login -u ${{ secrets.DOCKER_USERNAME2 }} -p ${{ secrets.DOCKER_PASSWORD }}
+      #     docker push ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:latest
 
-      - name: Deploy to production
-        uses: appleboy/scp-action@master
+      - name: Create .env file
+        uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.PRODUCTION_HOST }}
+          port: 54722
           username: ${{ secrets.PRODUCTION_USERNAME }}
           password: ${{ secrets.PRODUCTION_PASSWORD }}
-          # key: ${{ secrets.PRODUCTION_PRIVATE_KEY }}
-          source: "./docker-compose.production.yaml"
-          target: "/home/${{ secrets.PRODUCTION_USERNAME }}/${REPOSITORY_NAME}/docker-compose.production.yaml"
+          script: echo "${{ secrets.ENV_FILE }}" > /home/${{ secrets.PRODUCTION_USERNAME }}/${{ env.REPOSITORY_NAME }}/.env
+      
+      # - name: Deploy to production
+      #   uses: appleboy/scp-action@master
+      #   with:
+      #     host: ${{ secrets.PRODUCTION_HOST }}
+      #     port: 54722
+      #     username: ${{ secrets.PRODUCTION_USERNAME }}
+      #     password: ${{ secrets.PRODUCTION_PASSWORD }}
+      #     source: "docker-compose.production.yaml"
+      #     target: "/home/${{ secrets.PRODUCTION_USERNAME }}/${{ env.REPOSITORY_NAME }}/docker-compose.production.yaml"
 
       - name: Run Docker Compose on production server
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.PRODUCTION_HOST }}
+          port: 54722
           username: ${{ secrets.PRODUCTION_USERNAME }}
           password: ${{ secrets.PRODUCTION_PASSWORD }}
-          # key: ${{ secrets.PRODUCTION_PRIVATE_KEY }}
           script: |
-            cd /home/${{ secrets.PRODUCTION_USERNAME }}/${REPOSITORY_NAME}
-            docker-compose -f docker-compose.production.yaml pull
-            docker-compose -f docker-compose.production.yaml down
-            docker-compose -f docker-compose.production.yaml up -d
-            docker-compose -f docker-compose.production.yaml run --rm rails bundle exec rails db:chatwoot_prepare
+            cd /home/${{ secrets.PRODUCTION_USERNAME }}/${{ env.REPOSITORY_NAME }}
+            docker compose -f docker-compose.production.yaml pull
+            docker compose -f docker-compose.production.yaml down
+            docker compose -f docker-compose.production.yaml up -d
+            docker compose -f docker-compose.production.yaml run --rm rails bundle exec rails db:chatwoot_prepare

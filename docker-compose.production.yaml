@@ -2,8 +2,9 @@ version: '3'
 
 services:
   base: &base
-    image: elskull/t-asisto:latest
-    env_file: .env ## Change this file for customized env variables
+    image: sendingtk/chatwoot:latest
+    env_file:
+      - .env ## Change this file for customized env variables
     volumes:
       - /data/storage:/app/storage
 
@@ -14,6 +15,8 @@ services:
       - redis
     ports:
       - '127.0.0.1:3000:3000'
+    env_file:
+      - .env
     environment:
       - NODE_ENV=production
       - RAILS_ENV=production
@@ -27,6 +30,8 @@ services:
     depends_on:
       - postgres
       - redis
+    env_file:
+      - .env
     environment:
       - NODE_ENV=production
       - RAILS_ENV=production
@@ -44,7 +49,7 @@ services:
     env_file:
       - .env
     environment:
-      - POSTGRES_DB=chatwoot
+      # - POSTGRES_DB=chatwoot
       - POSTGRES_USER=${POSTGRES_USERNAME}
       # Please provide your own password.
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -53,7 +58,8 @@ services:
     image: redis:alpine
     restart: always
     command: ["sh", "-c", "redis-server --requirepass \"$REDIS_PASSWORD\""]
-    env_file: .env
+    env_file:
+      - .env
     volumes:
       - /data/redis:/data
     ports:
